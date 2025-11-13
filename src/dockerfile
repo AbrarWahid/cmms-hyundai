@@ -1,0 +1,33 @@
+# Development Dockerfile for Next.js (Debian-slim base)
+FROM node:20-bullseye-slim
+
+WORKDIR /app
+
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Install build tools for packages that need compilation
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        make \
+        g++ \
+        build-essential \
+        ca-certificates \
+        git && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy package files first to leverage Docker cache
+COPY package*.json ./
+
+# Install dependencies (without --silent to see errors)
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+# Copy application source
+COPY . .
+
+# Expose dev port
+EXPOSE 3000
+
+# Default dev command (hot reload)
+CMD ["npm", "run", "dev"]
