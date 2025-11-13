@@ -1,0 +1,62 @@
+services:
+  # MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: hyundai_cmms
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Flask backend
+  python_api:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    container_name: python_service
+    working_dir: /app
+    volumes:
+      - ./python:/app
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/
+      MONGODB_DB: hyundai_cmms
+      FLASK_ENV: development
+      SECRET_KEY: hyundai-cmms-secret-key-2024
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: always
+    command: python app.py
+
+  # Next.js frontend
+  frontend:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    container_name: nextjs_frontend
+    working_dir: /app
+    volumes:
+      - ./src:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:5000/api
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    depends_on:
+      - python_api
+    restart: always
+
+volumes:
+  mongo_data:

@@ -1,0 +1,21 @@
+# Hyundai CMMS backend - install latest versions from PyPI
+Flask
+Flask-Cors
+pymongo[srv]
+python-dotenv
+Flask-RESTX
+Flask-JWT-Extended
+gunicorn
+marshmallow
+passlib[bcrypt]
+python-dateutil
+requests
+
+# Optional / helpful utilities
+email-validator
+bcrypt
+
+# Development / testing (optional; uncomment if needed)
+# pytest
+# black
+# flake8
